@@ -7,6 +7,7 @@ from sklearn import svm
 #from sklearn.model_selection import cross_val_score
 import os
 from joblib import dump,load
+from sklearn.neural_network import MLPClassifier
 #os.path.isfile('./file.txt')
 
 with open('data_v1.csv') as csv_file:
@@ -49,7 +50,7 @@ labelName = 'Labels'
 example_id = np.array(['%d' % i for i in range(len(labels))])
 example_id_column_name = 'example_id'
 
-X = np.array([inter_arr_time,size,source_ip,dest_ip])
+X = np.array([inter_arr_time,source_ip,dest_ip])
 y = np.array([labels])
 y = y.reshape(y.shape[1:])
 X = X.transpose()
@@ -64,6 +65,7 @@ if not os.path.isfile('./SVCPacketClassifier.joblib'):
 #scores = cross_val_score(clf, X, y, cv=4)
 #print scores
 else:
+    print "Fetching SVM Modle from Disk"
     clfSVC = load('./SVCPacketClassifier.joblib')
 y_pred = clfSVC.predict(X_test)
 
@@ -76,9 +78,10 @@ print "SVM: "
 print (correct*1.0)/len(y_test) 
 
 if not os.path.isfile('./LRPacketClassifier.joblib'):
-    clfLR = LogisticRegression(random_state=0, solver='lbfgs', max_iter=4000 , multi_class='multinomial').fit(X_train, y_train)
+    clfLR = LogisticRegression(random_state=0, solver='lbfgs',max_iter=4000 ,multi_class='multinomial').fit(X_train, y_train)
     dump(clfLR,'./LRPacketClassifier.joblib')
 else:
+    print "Fetching LR Model from Disk"
     clfLR = load('./LRPacketClassifier.joblib')
 X_test = X_test.astype(np.float64)
 y_pred = clfLR.predict(X_test);
@@ -90,5 +93,20 @@ for i  in range(len(y_test)):
 print "Logistic Regression: " 
 print (correct*1.0)/len(y_test)
 
+if not os.path.isfile('./MLPPacketClassifier.joblib'):
+    	clfMLP = MLPClassifier(solver='lbfgs', alpha=1e-5,
+                     hidden_layer_sizes=(5, 2), random_state=1)
+	X_train = X_train.astype(np.float64)
+	clfMLP.fit(X_train, y_train)
+	dump(clfMLP,'./MLPPacketClassifier.joblib')
+else:
+    print "Fetching MLP Model from Disk"
+    clfMLP = load('./MLPPacketClassifier.joblib')
+X_test = X_test.astype(np.float64)
+y_pred = clfMLP.predict(X_test)
 
-
+correct = 0
+for i  in range(len(y_test)):
+    correct += (y_pred[i] == y_test[i])
+print "Neural Nets: "
+print (correct*1.0)/len(y_test)
