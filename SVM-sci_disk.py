@@ -6,7 +6,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 #from sklearn.model_selection import cross_val_score
 import os
-from joblib import dump,load
 #os.path.isfile('./file.txt')
 
 with open('data_v1.csv') as csv_file:
@@ -60,35 +59,34 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 
 if not os.path.isfile('./SVCPacketClassifier.joblib'):
     clfSVC = svm.SVC(gamma='scale')
-    clfSVC.fit(X_train, y_train)
+    clfSVC.fit(X, y)
 #scores = cross_val_score(clf, X, y, cv=4)
 #print scores
 else:
-    clfSVC = load('./SVCPacketClassifier.joblib')
-y_pred = clfSVC.predict(X_test)
+    clfSVC = load('SVCPacketClassifier.joblib')
 
-dump(clfSVC,'SVCPacketClassifier.joblib')
+y_pred = clfSVC.predict(X_test)
 
 correct = 0
 for i  in range(len(y_test)):
     correct += (y_pred[i] == y_test[i])
 print "SVM: "
 print (correct*1.0)/len(y_test) 
+print "\n"
 
 if not os.path.isfile('./LRPacketClassifier.joblib'):
-    clfLR = LogisticRegression(random_state=0, solver='lbfgs', max_iter=4000 , multi_class='multinomial').fit(X_train, y_train)
-    dump(clfLR,'./LRPacketClassifier.joblib')
+    clfLR = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial').fit(X, y)
 else:
-    clfLR = load('./LRPacketClassifier.joblib')
-X_test = X_test.astype(np.float64)
+    clrLR = load('LRPacketClassifier.joblib')
+
 y_pred = clfLR.predict(X_test);
  
-dump(clfLR,'LRPacketClassifier.joblib')
-correct = 0
 for i  in range(len(y_test)):
     correct += (y_pred[i] == y_test[i])
 print "Logistic Regression: " 
 print (correct*1.0)/len(y_test)
 
 
-
+from joblib import dump,load
+dump(clfSVC,'SVCPacketClassifier.joblib')
+dump(clfLR,'LRPacketClassifier.joblib')
